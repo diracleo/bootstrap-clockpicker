@@ -10,7 +10,7 @@ Fixes several issues and adds more options to the Bootstrap version of [https://
 ## Added Options:
 - leadingZeroHours: whether to add a preceding zero to the hour when it is less than 10 - also applies to parsing pre-filled input value
 - upperCaseAmPm: whether to make the am/pm uppercase - also applies to parsing pre-filled input value
-- leadingSpaceAmApm: whether to insert a space between the time and the am/pm - also applies to parsing pre-filled input value
+- leadingSpaceAmPm: whether to insert a space between the time and the am/pm - also applies to parsing pre-filled input value
 
 ## Use Example:
 ```
