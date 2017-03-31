@@ -80,7 +80,7 @@
 					'<div class="clockpicker-dial clockpicker-hours"></div>',
 					'<div class="clockpicker-dial clockpicker-minutes clockpicker-dial-out"></div>',
 				'</div>',
-				'<span class="clockpicker-am-pm-block">',
+				'<span class="clockpicker-am-pm-block" style="position:relative;">',
 				'</span>',
 			'</div>',
 		'</div>'
@@ -161,18 +161,29 @@
 			$('<a class="btn btn-sm btn-default clockpicker-button am-button">' + self.amStr + '</a>')
 				.on("click", function(ev) {
 					self.amOrPm = "am";
-					$('.clockpicker-span-am-pm').empty().append(self.amStrFormatted);
-					$(".pm-button").removeClass("clockpicker-button-on");
+					self.popover.find('.clockpicker-span-am-pm').empty().append(self.amStrFormatted);
+					self.popover.find(".pm-button").removeClass("clockpicker-button-on");
 					$(this).addClass("clockpicker-button-on");
+					raiseCallback(options.afterAmPmSelect);
 				}).appendTo(this.amPmBlock);
 
 
 			$('<a class="btn btn-sm btn-default clockpicker-button pm-button">' + self.pmStr + '</a>')
 				.on("click", function() {
 					self.amOrPm = "pm";
-					$('.clockpicker-span-am-pm').empty().append(self.pmStrFormatted);
-					$(".am-button").removeClass("clockpicker-button-on");
+					self.popover.find('.clockpicker-span-am-pm').empty().append(self.pmStrFormatted);
+					self.popover.find(".am-button").removeClass("clockpicker-button-on");
 					$(this).addClass("clockpicker-button-on");
+					raiseCallback(options.afterAmPmSelect);
+				}).appendTo(this.amPmBlock);
+
+	      $('<a class="btn btn-sm btn-default clockpicker-button switch-hand-button" style="color:#666 !important; background-color:transparent !important; padding:0px; border: 1px solid rgba(0, 0, 0, .2); position:absolute; width:70px; display:block; left:50%; top:0px; margin-left:-35px;">Min <i class="fa fa-arrow-right"></i></a>')
+				.on("click", function() {
+               if(self.currentView == "minutes") {
+                  self.spanHours.click();
+               } else {
+                  self.spanMinutes.click();
+               }
 				}).appendTo(this.amPmBlock);
 
 		}
@@ -320,6 +331,7 @@
 							self.done();
 						}, duration / 2);
 					}
+					raiseCallback(options.afterMinuteSelect);
 				}
 				plate.prepend(canvas);
 
@@ -470,6 +482,13 @@
 					self.locate();
 				}
 			});
+			if($(".modal").length) {
+   			$(".modal").on('scroll', function() {
+   			   if (self.isShown) {
+   					self.locate();
+   				}
+   			});
+		   }
 
 			this.isAppended = true;
 		}
@@ -518,9 +537,9 @@
 		this.spanMinutes.html(leadingZero(this.minutes));
       if(this.options.twelvehour) {
    		if(this.amOrPm == "am") {
-   		   $(".am-button").click();
+   		   this.popover.find(".am-button").click();
    		} else {
-   		   $(".pm-button").click();
+   		   this.popover.find(".pm-button").click();
    		}
 	   }
 
@@ -599,6 +618,12 @@
 		if (raiseAfterHourSelect) {
 			raiseCallback(this.options.afterHourSelect);
 		}
+
+		if(this.currentView == "hours") {
+         this.popover.find(".switch-hand-button").html('Min <i class="fa fa-arrow-right"></i>');
+      } else {
+         this.popover.find(".switch-hand-button").html('<i class="fa fa-arrow-left"></i> Hour');
+      }
 	};
 
 	// Reset clock hand
@@ -769,6 +794,44 @@
 		}
 
 		raiseCallback(this.options.afterDone);
+	};
+
+	// Hours and minutes are selected
+	ClockPicker.prototype.realtimeDone = function() {
+	   if(typeof(this.hours) != 'undefined' && typeof(this.minutes) != 'undefined') {
+   		raiseCallback(this.options.beforeDone);
+   		//this.hide();
+   		var last = this.input.prop('value');
+   		var value = '';
+   		if(this.options.leadingZeroHours) {
+   		   value += leadingZero(this.hours);
+   		} else {
+   		   value += this.hours;
+   		}
+   		value += ':';
+   		value += leadingZero(this.minutes);
+   		if  (this.options.twelvehour) {
+   		   if(this.amOrPm == "am") {
+   		      value = value + this.amStrFormatted;
+   		   } else {
+   		      value = value + this.pmStrFormatted;
+   		   }
+   		}
+
+   		this.input.prop('value', value);
+   		if (value !== last) {
+   			this.input.triggerHandler('change');
+   			if (! this.isInput) {
+   				this.element.trigger('change');
+   			}
+   		}
+
+   		if (this.options.autoclose) {
+   			this.input.trigger('blur');
+   		}
+
+   		raiseCallback(this.options.afterDone);
+	   }
 	};
 
 	// Remove clockpicker from input
